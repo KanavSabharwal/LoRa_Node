@@ -7,9 +7,6 @@ import os
 
 # Switch off heartbeat LED
 pycom.heartbeat(False)
-# pycom.pybytes_on_boot(False) 
-# pycom.smart_config_on_boot(False)
-# pycom.wifi_on_boot(True)
 
 # Connect to WiFi
 wlan = WLAN(mode=WLAN.STA)
@@ -17,7 +14,6 @@ wlan.connect("NUS_STU", auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji7July
 while not wlan.isconnected():
     machine.idle()
 
-# print(wlan.ifconfig())
 # Indicate Wifi Connection with red LED
 pycom.rgbled(0xFF0000)
 
@@ -36,70 +32,33 @@ lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868)
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # Set the frequencies and spreading factors for the messages
-frequencies = [868000000]
-sfs = [7]
+freq = 868000000
+sf = 7
 
-freq_sf = [(freq,sf) for freq in frequencies for sf in sfs]
+messages = [[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
+            [0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01],
+            [0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f],
+            [0x00,0x0f,0x02,0x0d,0x04,0x0b,0x06,0x09,0x08,0x07,0x0a,0x05,0x0c,0x03,0x0e,0x01],
+            [0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
+            [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01],
+            [0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa],
+            [0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff],
+            [0xff,0xfe,0xfc,0xf8,0xf0,0xe1,0xc2,0x85,0x0b,0x17,0x2f,0x5e,0xbc,0x78,0xf1,0xe3],
+            [0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff]]
 
-# print(freq_sf)
+lora.frequency(freq)
+lora.sf(sf)
+
+node_offset = 0 # 0/2/4
+
 while True:
-    # Send the messages with green light
-    i = 0
-    num = machine.rng()
-    while i<len(freq_sf):
-        # if i == 3:
-        #     pycom.rgbled(0xFFFF00)
-        #     time.sleep(5)
-        #     pycom.rgbled(0x000000)
-        current_time = rtc.now()
-        lora.frequency(freq_sf[i][0])
-        lora.sf(freq_sf[i][1])
-        # s.send("Hello, Jai Guruji {}".format(num))
-        big_buffer = bytes([0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x01])
-        # big_buffer = bytes([0x00,0x01,0x01,0x01,0x01,0x01,0x01,0x00,0x00,0x01,0x01,0x01,0x01,0x01,0x01,0x00])
-
-        if current_time[5]%15==0:
-            print("\n{}/{}/{}-{}:{}:{}:{},{},{},{}".format(current_time[2],current_time[1], current_time[0],current_time[3],current_time[4], current_time[5], current_time[6],num,freq_sf[i][1],freq_sf[i][0]))
-            s.send(big_buffer)
-            pycom.rgbled(0x00FF00)  
-            time.sleep(2)
-            pycom.rgbled(0x000000)
-        # with open('/flash/test_jgj.txt','a') as f:
-        
-        # time.sleep(60)
-        i+=1
-    # time.sleep(2)
-
-
-
-
-
-
-#     current_time = rtc.now()
-#     if current_time[5]%3==0:
-
-
-#     starting = False
-#     # Print the time with millisecond precision
-#     print("{}/{}/{} {}:{}:{}:{}".format(current_time[2],current_time[1], current_time[0],current_time[3],current_time[4], current_time[5], current_time[6]))
-    
-#     if not rtc.synced():
-#         print("Not synced")
-#         pycom.rgbled(0x00FFFF)
-
-#     time.sleep(5)
-
-
-# # pycom.rgbled(0x000000)
-
-
-# # lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868)
-# # s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-# # s.setblocking(False)
-# # i = 0
-# # pycom.rgbled(0x00FF00)
-# # while True:
-# #     s.send('Ping')
-# #     print('Ping {}'.format(i))
-# #     i= i+1
-# #     time.sleep(5)
+    current_time = rtc.now()
+    message = messages[current_time[5]//6]
+    if current_time[5]%6==node_offset:
+        # Send message and flash LED
+        big_buffer = bytes(message)
+        s.send(big_buffer)
+        pycom.rgbled(0x00FF00)  
+        time.sleep(2)
+        pycom.rgbled(0x000000)
+        time.sleep(2)
