@@ -19,7 +19,7 @@ pycom.rgbled(0xFF0000)
 
 time.sleep(1)
 rtc = machine.RTC()
-rtc.ntp_sync("2.sg.pool.ntp.org",update_period = 3600)
+rtc.ntp_sync("0.ubuntu.pool.ntp.org",update_period = 3600)
 
 while not rtc.synced():
     machine.idle()
@@ -28,7 +28,12 @@ pycom.rgbled(0x0000FF)
 time.sleep(1)
 starting = True
 
-lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868)
+lora = LoRa(mode=LoRa.LORA, region=LoRa.EU868,power_mode = LoRa.TX_ONLY)
+
+if lora.power_mode()==LoRa.TX_ONLY:
+    pycom.rgbled(0xFFFF00)
+    time.sleep(1)
+
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # Set the frequencies and spreading factors for the messages
@@ -48,6 +53,7 @@ messages = [[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
 
 lora.frequency(freq)
 lora.sf(sf)
+lora.tx_power(14)
 
 node_offset = 0 # 0/2/4
 
@@ -56,6 +62,7 @@ while True:
     message = messages[current_time[5]//6]
     if current_time[5]%6==node_offset:
         # Send message and flash LED
+        # print(lora.stats())
         big_buffer = bytes(message)
         s.send(big_buffer)
         pycom.rgbled(0x00FF00)  
