@@ -8,21 +8,39 @@ import os
 # Switch off heartbeat LED
 pycom.heartbeat(False)
 
-# Connect to WiFi
-wlan = WLAN(mode=WLAN.STA)
-wlan.connect("NUS_STU", auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji7July@'), identity='nusstu\e0575775')
-while not wlan.isconnected():
-    machine.idle()
-
 # Indicate Wifi Connection with red LED
 pycom.rgbled(0xFF0000)
-
 time.sleep(1)
+pycom.rgbled(0x000000)
+
+wlan = WLAN(mode=WLAN.STA)
+nets = wlan.scan()
+for net in nets:
+    if net.ssid == 'NUS_STU':
+        # print('Network found!')
+        # wlan.connect(net.ssid, auth=(WLAN.WPA2, 'KanavHotspot'))
+        wlan.connect(net.ssid, auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
+        while not wlan.isconnected():
+            pass
+        # print('WLAN connection succeeded!')
+        break
+
+# wlan = WLAN(mode=WLAN.STA)
+# wlan.scan()     # scan for available networks
+# # wlan.connect("KanaviPhone", auth=(WLAN.WPA2, 'KanavHotspot'))
+# wlan.connect("NUS_STU", auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
+# while not wlan.isconnected():
+#     pass
+# print(wlan.ifconfig())
+
+pycom.rgbled(0xFFFF00)
+
 rtc = machine.RTC()
 rtc.ntp_sync("0.ubuntu.pool.ntp.org",update_period = 3600)
 
 while not rtc.synced():
-    machine.idle()
+    pass
+
 #Indicate Time sync with blue light
 pycom.rgbled(0x0000FF)
 time.sleep(1)
@@ -37,8 +55,6 @@ if lora.power_mode()==LoRa.TX_ONLY:
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # Set the frequencies and spreading factors for the messages
-freq = 868000000
-sf = 7
 
 hex_values = [0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
        0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11,
@@ -275,13 +291,18 @@ message_ind = [[134, 56, 185, 0, 14, 111, 51, 108],
  [42, 230, 215, 53, 228, 223, 76, 161]]
 
 messages = [[hex_values[i] for i in message_ind_j] for message_ind_j in message_ind]
+freq = 868000000
+sf = 8
+power = 13
+bandwidth = LoRa.BW_125KHZ
 
 lora.frequency(freq)
 lora.sf(sf)
-lora.tx_power(14)
+lora.tx_power(power)
 lora.coding_rate(LoRa.CODING_4_5)
+lora.bandwidth(bandwidth)
 
-node_offset = 0 # 0/2/4
+node_offset = 2 # 0/2/4
 
 while True:
     current_time = rtc.now()
@@ -294,10 +315,10 @@ while True:
     # message = messages[0]
 
     if time_now%6==node_offset:
-        # print("Sending {} at {}".format(message,current_time))
+        # print("Sending {} at {}".format(message,current_time,time_now))
         big_buffer = bytes(message)
         s.send(big_buffer)
         pycom.rgbled(0x00FF00)  
         time.sleep(0.5)
         pycom.rgbled(0x000000)
-        time.sleep(3.5)
+        time.sleep(3)
