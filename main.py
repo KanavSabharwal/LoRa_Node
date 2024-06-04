@@ -17,21 +17,13 @@ wlan = WLAN(mode=WLAN.STA)
 nets = wlan.scan()
 for net in nets:
     if net.ssid == 'NUS_STU':
-        # print('Network found!')
-        # wlan.connect(net.ssid, auth=(WLAN.WPA2, 'KanavHotspot'))
-        wlan.connect(net.ssid, auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
+        print('Network found!',net)
+        # wlan.connect(net.ssid, auth=(net.sec, 'cirlab@123'))
+        wlan.connect(net.ssid, auth=(net.sec, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
         while not wlan.isconnected():
             pass
-        # print('WLAN connection succeeded!')
+        print('WLAN connection succeeded!')
         break
-
-# wlan = WLAN(mode=WLAN.STA)
-# wlan.scan()     # scan for available networks
-# # wlan.connect("KanaviPhone", auth=(WLAN.WPA2, 'KanavHotspot'))
-# wlan.connect("NUS_STU", auth=(WLAN.WPA2_ENT, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
-# while not wlan.isconnected():
-#     pass
-# print(wlan.ifconfig())
 
 pycom.rgbled(0xFFFF00)
 
@@ -52,6 +44,7 @@ if lora.power_mode()==LoRa.TX_ONLY:
     pycom.rgbled(0xFFFF00)
     time.sleep(1)
 
+pycom.rgbled(0x000000)
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # Set the frequencies and spreading factors for the messages
@@ -293,7 +286,7 @@ message_ind = [[134, 56, 185, 0, 14, 111, 51, 108],
 messages = [[hex_values[i] for i in message_ind_j] for message_ind_j in message_ind]
 freq = 868000000
 sf = 8
-power = 13
+power = 14
 bandwidth = LoRa.BW_125KHZ
 
 lora.frequency(freq)
@@ -302,20 +295,22 @@ lora.tx_power(power)
 lora.coding_rate(LoRa.CODING_4_5)
 lora.bandwidth(bandwidth)
 
-node_offset = 2 # 0/2/4
+node_offset = 18 # 0/2/4/6/8/10/12/14/16/18
 
 while True:
     current_time = rtc.now()
     time_now = current_time[4]*60+current_time[5]
 
-    time_now %= 1200
-    message = messages[time_now//6]
+    time_now %= 3600
+    message_id = time_now//20  # 0-179 messages only
+    message = messages[message_id]
     
     # time_now = current_time[5]
     # message = messages[0]
 
-    if time_now%6==node_offset:
-        # print("Sending {} at {}".format(message,current_time,time_now))
+    if time_now%20==node_offset:
+        # print("Sending {} at {}".format(message_id,current_time,time_now))
+        # print("Lora configuration: ",lora.stats())
         big_buffer = bytes(message)
         s.send(big_buffer)
         pycom.rgbled(0x00FF00)  

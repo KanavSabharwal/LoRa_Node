@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "LoRa_Node",
+			"path": "."
+		},
+		{
+			"name": "serial://dev/ttyACM0",
+			"uri": "serial://%2fdev%2fttyacm0/flash"
+		},
+		{
+			"name": "serial://dev/ttyACM0",
+			"uri": "serial://%2fdev%2fttyacm0/flash"
+		}
+	]
+}
