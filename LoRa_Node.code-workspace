@@ -1,16 +1,20 @@
 {
 	"folders": [
 		{
-			"name": "LoRa_Node",
 			"path": "."
 		},
 		{
-			"name": "serial://dev/ttyACM0",
-			"uri": "serial://%2fdev%2fttyacm0/flash"
+			"name": "serial://dev/tty.usbmodemPy48cee41",
+			"uri": "serial:///dev/tty.usbmodempy48cee41/flash"
 		},
 		{
-			"name": "serial://dev/ttyACM0",
-			"uri": "serial://%2fdev%2fttyacm0/flash"
+			"name": "serial://dev/tty.usbmodemPy01521f1",
+			"uri": "serial://%2fdev%2ftty.usbmodempy01521f1/flash"
+		},
+		{
+			"name": "serial://dev/tty.usbmodemPya24eed1",
+			"uri": "serial://%2fdev%2ftty.usbmodempya24eed1/flash"
 		}
-	]
+	],
+	"settings": {}
 }

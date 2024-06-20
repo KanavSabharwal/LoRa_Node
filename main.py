@@ -14,16 +14,17 @@ time.sleep(1)
 pycom.rgbled(0x000000)
 
 wlan = WLAN(mode=WLAN.STA)
-nets = wlan.scan()
-for net in nets:
-    if net.ssid == 'NUS_STU':
-        print('Network found!',net)
-        # wlan.connect(net.ssid, auth=(net.sec, 'cirlab@123'))
-        wlan.connect(net.ssid, auth=(net.sec, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
-        while not wlan.isconnected():
-            pass
-        print('WLAN connection succeeded!')
-        break
+while not wlan.isconnected():
+    nets = wlan.scan()
+    for net in nets:
+        if net.ssid == 'NUS_STU':
+            print('Network found!',net)
+            # wlan.connect(net.ssid, auth=(net.sec, 'cirlab@123'))
+            wlan.connect(net.ssid, auth=(net.sec, 'nusstu\e0575775', '@Jaiguruji160407@'), identity='nusstu\e0575775')
+            while not wlan.isconnected():
+                pass
+            print('WLAN connection succeeded!')
+            break
 
 pycom.rgbled(0xFFFF00)
 
@@ -46,7 +47,6 @@ if lora.power_mode()==LoRa.TX_ONLY:
 
 pycom.rgbled(0x000000)
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-
 # Set the frequencies and spreading factors for the messages
 
 hex_values = [0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
@@ -285,8 +285,8 @@ message_ind = [[134, 56, 185, 0, 14, 111, 51, 108],
 
 messages = [[hex_values[i] for i in message_ind_j] for message_ind_j in message_ind]
 freq = 868000000
-sf = 8
-power = 14
+sf = 10
+power = 4
 bandwidth = LoRa.BW_125KHZ
 
 lora.frequency(freq)
@@ -295,10 +295,12 @@ lora.tx_power(power)
 lora.coding_rate(LoRa.CODING_4_5)
 lora.bandwidth(bandwidth)
 
-node_offset = 18 # 0/2/4/6/8/10/12/14/16/18
+
+node_offset = 14 # 0/2/4/6/8/10/12/14/16/18
 
 while True:
     current_time = rtc.now()
+    # current_time = time.localtime()
     time_now = current_time[4]*60+current_time[5]
 
     time_now %= 3600
@@ -309,11 +311,11 @@ while True:
     # message = messages[0]
 
     if time_now%20==node_offset:
-        # print("Sending {} at {}".format(message_id,current_time,time_now))
+        # print("Sending {} at {}".format(message_id,current_time))
         # print("Lora configuration: ",lora.stats())
         big_buffer = bytes(message)
         s.send(big_buffer)
         pycom.rgbled(0x00FF00)  
-        time.sleep(0.5)
+        time.sleep(0.3)
         pycom.rgbled(0x000000)
-        time.sleep(3)
+        time.sleep(1)
