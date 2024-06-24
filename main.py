@@ -285,7 +285,7 @@ message_ind = [[134, 56, 185, 0, 14, 111, 51, 108],
 
 messages = [[hex_values[i] for i in message_ind_j] for message_ind_j in message_ind]
 freq = 868000000
-sf = 10
+sf = 8
 power = 4
 bandwidth = LoRa.BW_125KHZ
 
@@ -296,22 +296,22 @@ lora.coding_rate(LoRa.CODING_4_5)
 lora.bandwidth(bandwidth)
 
 
-node_offset = 14 # 0/2/4/6/8/10/12/14/16/18
+node_offset = 0 # 0/2/4/6/8/10/12/14/16/18
 
 while True:
     current_time = rtc.now()
     # current_time = time.localtime()
     time_now = current_time[4]*60+current_time[5]
 
-    time_now %= 3600
-    message_id = time_now//20  # 0-179 messages only
+    time_now %= 900
+    message_id = time_now//6 # 0-149 messages only
     message = messages[message_id]
     
     # time_now = current_time[5]
     # message = messages[0]
 
-    if time_now%20==node_offset:
-        # print("Sending {} at {}".format(message_id,current_time))
+    if time_now%6==node_offset:
+        print("Sending {} at {}".format(message_id,current_time))
         # print("Lora configuration: ",lora.stats())
         big_buffer = bytes(message)
         s.send(big_buffer)
